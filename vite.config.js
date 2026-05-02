@@ -5,10 +5,12 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
+      // In dev, /api/prizepicks is rewritten to the PrizePicks origin directly.
+      // In production, Vercel routes /api/prizepicks to api/prizepicks.js instead.
       '/api/prizepicks': {
         target: 'https://partner-api.prizepicks.com',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/prizepicks/, ''),
+        rewrite: () => '/projections?per_page=1000&single_stat=true',
         secure: true,
       },
     },

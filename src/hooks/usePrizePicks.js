@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { PP_MULTIPLIERS } from '../utils/ev.js'
 
-const API_URL = '/api/prizepicks/projections?per_page=1000&single_stat=true'
+const API_URL = '/api/prizepicks'
 const REFRESH_MS = 5 * 60 * 1000
 
 function estimateProb(attrs, statType) {

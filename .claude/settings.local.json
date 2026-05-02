@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(command -v node npm bun)",
+      "Read(//Users/darleen/**)",
+      "Read(//usr/local/lib/**)"
+    ]
+  }
+}

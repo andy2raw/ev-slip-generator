@@ -9,7 +9,7 @@ function estimateProb(attrs, statType) {
 
   if (attrs.is_promo) p += 0.04
   if (attrs.odds_type === 'demon') p -= 0.03
-  if (attrs.odds_type === 'goblin') p += 0.03
+  if (attrs.odds_type === 'goblin') p += 0.06
 
   const highVar = ['3-PT Made', 'Blocks', 'Home Runs', 'Stolen Bases', 'Turnovers']
   if (highVar.some(s => statType?.includes(s))) p -= 0.025

@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { usePrizePicks } from '../hooks/usePrizePicks.js'
 import { findBestPPCombos } from '../utils/combos.js'
-import { PP_MULTIPLIERS, formatProb, formatEV, probClass, probDot, formatTime } from '../utils/ev.js'
+import { PP_MULTIPLIERS, getEffectiveMult, formatProb, formatEV, probClass, probDot, formatTime } from '../utils/ev.js'
 
 // ── Sport emoji ──────────────────────────────────────────────────────────────
 
@@ -573,9 +573,13 @@ export default function PrizePicksSection() {
               </thead>
               <tbody>
                 {sorted.map(p => {
-                  const ev2 = p.probability * PP_MULTIPLIERS[2] - 1
-                  const ev4 = Math.pow(p.probability, 4) * PP_MULTIPLIERS[4] - 1
-                  const ev6 = Math.pow(p.probability, 6) * PP_MULTIPLIERS[6] - 1
+                  const isGoblin = p.oddsType === 'goblin'
+                  const mult2 = isGoblin ? getEffectiveMult(2, 1) : PP_MULTIPLIERS[2]
+                  const mult4 = isGoblin ? getEffectiveMult(4, 1) : PP_MULTIPLIERS[4]
+                  const mult6 = isGoblin ? getEffectiveMult(6, 1) : PP_MULTIPLIERS[6]
+                  const ev2 = Math.pow(p.probability, 2) * mult2 - 1
+                  const ev4 = Math.pow(p.probability, 4) * mult4 - 1
+                  const ev6 = Math.pow(p.probability, 6) * mult6 - 1
                   const m = p.lineMove
                   return (
                     <tr key={p.id} style={m ? { background: 'rgba(234,179,8,0.03)' } : undefined}>

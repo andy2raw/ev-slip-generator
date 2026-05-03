@@ -23,6 +23,33 @@ function estimateProb(attrs, statType) {
   return Math.min(0.74, Math.max(0.46, p))
 }
 
+// Returns false for team-level or match-aggregate props that appear in esports
+// markets as fake "player" entries (e.g. "KT MAPS 1-2", "Team Total Kills").
+// Individual player names never contain score patterns or these keywords.
+function isRealPlayerProp(name) {
+  if (!name || !name.trim()) return false
+  const n = name.trim()
+
+  // Match score patterns: "1-2", "2 - 0", etc.
+  if (/\b\d\s*-\s*\d\b/.test(n)) return false
+
+  // Team / aggregate keywords that would never appear in a player name
+  const teamRx = [
+    /\bmaps?\b/i,                                        // "MAPS 1-2"
+    /\btotal\b/i,                                        // "Team Total Kills"
+    /\bfirst\s+(blood|tower|dragon|baron|kill|turret|strike|roshan)\b/i,
+    /\b(blue|red)\s*team\b/i,
+    /\bgame\s+\d+\b/i,                                   // "Game 1 Kills"
+    /\bkill\s+ratio\b/i,
+    /\bround\s+wins?\b/i,
+    /\bmatch\s+kills\b/i,
+    /\bteam\s+kills\b/i,
+  ]
+  if (teamRx.some(rx => rx.test(n))) return false
+
+  return true
+}
+
 // Returns recommendation based on direction and magnitude of line move.
 // delta > 0 means line went UP — Over is harder — bad for bettors.
 // delta < 0 means line went DOWN — Over is easier — good for bettors.
@@ -65,6 +92,14 @@ export function usePrizePicks() {
         .filter(p => {
           const s = p.attributes.status
           return s === 'pre_game' || s === 'in_progress'
+        })
+        .filter(p => {
+          // Resolve the display name the same way the .map() does so the filter
+          // sees the same string the UI would render.
+          const playerRef = p.relationships?.new_player?.data
+          const player = playerRef ? inc?.new_player?.[playerRef.id] : null
+          const name = player?.attributes?.display_name || p.attributes.description || ''
+          return isRealPlayerProp(name)
         })
         .map(p => {
           const a = p.attributes

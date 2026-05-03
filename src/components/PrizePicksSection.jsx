@@ -203,19 +203,49 @@ function SlipCard({ combo, rank, showLeague }) {
         ))}
       </div>
 
-      {/* Footer: joint prob + payout */}
+      {/* Footer: joint prob + payout (goblin-adjusted) */}
       <div style={{
         display: 'flex', gap: 14, fontSize: 11,
         color: 'var(--text-muted)', paddingTop: 7,
         borderTop: '1px solid var(--border)',
       }}>
         <span>
-          Joint hit: <strong style={{ color: 'var(--text)' }}>{formatProb(combo.jointProb)}</strong>
+          Joint hit:{' '}
+          <strong style={{ color: 'var(--text)' }}>{formatProb(combo.jointProb)}</strong>
         </span>
-        <span>
-          Payout: <strong style={{ color: 'var(--accent)' }}>{combo.mult}x</strong>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          Payout:{' '}
+          <strong style={{ color: combo.goblinCount > 0 ? 'var(--yellow)' : 'var(--accent)' }}>
+            {combo.effectiveMult}x
+          </strong>
+          {combo.goblinCount > 0 && combo.effectiveMult < combo.mult && (
+            <span style={{
+              color: 'var(--text-dim)', textDecoration: 'line-through', fontSize: 10,
+            }}>
+              {combo.mult}x
+            </span>
+          )}
         </span>
       </div>
+
+      {/* Goblin warning strip */}
+      {combo.goblinCount > 0 && (
+        <div style={{
+          marginTop: 7,
+          padding: '5px 8px',
+          background: 'rgba(234,179,8,0.08)',
+          border: '1px solid rgba(234,179,8,0.22)',
+          borderRadius: 5,
+          fontSize: 11,
+          color: 'var(--yellow)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 5,
+        }}>
+          ⚠ {combo.goblinCount} goblin pick{combo.goblinCount > 1 ? 's' : ''} — payout
+          reduced from {combo.mult}x to {combo.effectiveMult}x
+        </div>
+      )}
     </div>
   )
 }

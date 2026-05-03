@@ -1,4 +1,4 @@
-import { PP_MULTIPLIERS } from './ev.js'
+import { PP_MULTIPLIERS, getEffectiveMult } from './ev.js'
 
 // Generate all k-size combinations from arr
 export function combinations(arr, k) {
@@ -12,16 +12,23 @@ export function combinations(arr, k) {
   return result
 }
 
-// Find best PrizePicks combos ranked by EV
+// Find best PrizePicks combos ranked by EV, preferring regular picks over Goblins.
 export function findBestPPCombos(picks, legCount, maxResults = 5) {
-  const mult = PP_MULTIPLIERS[legCount]
-  if (!mult) return []
+  const baseMult = PP_MULTIPLIERS[legCount]
+  if (!baseMult) return []
 
   // Limit input to prevent combinatorial explosion
   const limits = { 2: 30, 4: 18, 6: 13 }
   const limit = limits[legCount] || 15
+
+  // Rank picks by probability but apply a small penalty to Goblin picks so that
+  // a regular pick at the same probability always slots in ahead of a Goblin.
   const top = [...picks]
-    .sort((a, b) => b.probability - a.probability)
+    .sort((a, b) => {
+      const aEff = a.probability - (a.oddsType === 'goblin' ? 0.02 : 0)
+      const bEff = b.probability - (b.oddsType === 'goblin' ? 0.02 : 0)
+      return bEff - aEff
+    })
     .slice(0, limit)
 
   return combinations(top, legCount)
@@ -32,8 +39,11 @@ export function findBestPPCombos(picks, legCount, maxResults = 5) {
     })
     .map(combo => {
       const joint = combo.reduce((acc, p) => acc * p.probability, 1)
-      const ev = joint * mult - 1
-      return { picks: combo, jointProb: joint, ev, legCount, mult }
+      const goblinCount = combo.filter(p => p.oddsType === 'goblin').length
+      // Use the goblin-adjusted multiplier so EV reflects what you actually get paid
+      const effectiveMult = getEffectiveMult(legCount, goblinCount)
+      const ev = joint * effectiveMult - 1
+      return { picks: combo, jointProb: joint, ev, legCount, mult: baseMult, goblinCount, effectiveMult }
     })
     .sort((a, b) => b.ev - a.ev)
     .slice(0, maxResults)

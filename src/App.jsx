@@ -3,6 +3,7 @@ import PrizePicksSection from './components/PrizePicksSection.jsx'
 import HardRockSection from './components/HardRockSection.jsx'
 import TrackerSection from './components/TrackerSection.jsx'
 import HistorySection from './components/HistorySection.jsx'
+import DailyQuote from './components/DailyQuote.jsx'
 
 const TABS = [
   { id: 'prizepicks', label: 'PrizePicks' },
@@ -32,6 +33,7 @@ export default function App() {
       </header>
 
       <main className="app-main">
+        <DailyQuote />
         {tab === 'prizepicks' && <PrizePicksSection />}
         {tab === 'hardrock'   && <HardRockSection />}
         {tab === 'tracker'    && <TrackerSection />}

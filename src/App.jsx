@@ -4,6 +4,7 @@ import HardRockSection from './components/HardRockSection.jsx'
 import TrackerSection from './components/TrackerSection.jsx'
 import HistorySection from './components/HistorySection.jsx'
 import DailyQuote from './components/DailyQuote.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 
 const TABS = [
   { id: 'prizepicks', label: 'PrizePicks' },
@@ -33,11 +34,21 @@ export default function App() {
       </header>
 
       <main className="app-main">
-        <DailyQuote />
-        {tab === 'prizepicks' && <PrizePicksSection />}
-        {tab === 'hardrock'   && <HardRockSection />}
-        {tab === 'tracker'    && <TrackerSection />}
-        {tab === 'history'    && <HistorySection />}
+        <ErrorBoundary label="Quote failed to render">
+          <DailyQuote />
+        </ErrorBoundary>
+        <ErrorBoundary label="PrizePicks section crashed">
+          {tab === 'prizepicks' && <PrizePicksSection />}
+        </ErrorBoundary>
+        <ErrorBoundary label="Hard Rock section crashed">
+          {tab === 'hardrock'   && <HardRockSection />}
+        </ErrorBoundary>
+        <ErrorBoundary label="Tracker section crashed">
+          {tab === 'tracker'    && <TrackerSection />}
+        </ErrorBoundary>
+        <ErrorBoundary label="History section crashed">
+          {tab === 'history'    && <HistorySection />}
+        </ErrorBoundary>
       </main>
     </div>
   )

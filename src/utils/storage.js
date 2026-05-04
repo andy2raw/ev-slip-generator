@@ -13,14 +13,22 @@ export function load() {
     const raw = localStorage.getItem(KEY)
     if (!raw) return defaults()
     const data = JSON.parse(raw)
-    return { ...defaults(), ...data }
+    return {
+      ...defaults(),
+      ...data,
+      // Guard against null/non-array bets from corrupted localStorage
+      bets: Array.isArray(data?.bets) ? data.bets : [],
+    }
   } catch {
     return defaults()
   }
 }
 
 export function save(data) {
-  localStorage.setItem(KEY, JSON.stringify(data))
+  // Safari private mode throws on setItem — fail silently rather than crash
+  try {
+    localStorage.setItem(KEY, JSON.stringify(data))
+  } catch {}
 }
 
 export function uid() {

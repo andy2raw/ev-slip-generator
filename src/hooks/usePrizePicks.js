@@ -90,7 +90,7 @@ export function usePrizePicks() {
 
       const parsed = (json.data || [])
         .filter(p => {
-          const s = p.attributes.status
+          const s = p.attributes?.status
           return s === 'pre_game' || s === 'in_progress'
         })
         .filter(p => {
@@ -98,11 +98,11 @@ export function usePrizePicks() {
           // sees the same string the UI would render.
           const playerRef = p.relationships?.new_player?.data
           const player = playerRef ? inc?.new_player?.[playerRef.id] : null
-          const name = player?.attributes?.display_name || p.attributes.description || ''
+          const name = player?.attributes?.display_name || p.attributes?.description || ''
           return isRealPlayerProp(name)
         })
         .map(p => {
-          const a = p.attributes
+          const a = p.attributes || {}
           const playerRef = p.relationships?.new_player?.data
           const player = playerRef ? inc?.new_player?.[playerRef.id] : null
 

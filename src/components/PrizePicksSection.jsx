@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { usePrizePicks } from '../hooks/usePrizePicks.js'
+import { usePlayerStats } from '../hooks/usePlayerStats.js'
 import { findBestPPCombos } from '../utils/combos.js'
 import { PP_MULTIPLIERS, getEffectiveMult, formatProb, formatEV, probClass, probDot, formatTime } from '../utils/ev.js'
 
@@ -45,7 +46,37 @@ function OddsTypePill({ type }) {
   )
 }
 
-// ── Line Move Panel (unchanged) ──────────────────────────────────────────────
+// Shows season avg + last-5 avg relative to the PrizePicks line.
+// Green = avg beats the line (Over looks good), red = avg trails the line.
+function StatsBadge({ line, seasonAvg, last5Avg }) {
+  if (seasonAvg == null && last5Avg == null) return null
+  const color = avg => {
+    if (avg == null) return 'var(--text-dim)'
+    const d = avg - line
+    if (d >= 3)  return '#22c55e'
+    if (d >= 1)  return '#86efac'
+    if (d >= -1) return 'var(--text-muted)'
+    return '#f87171'
+  }
+  return (
+    <div style={{ fontSize: 11, lineHeight: 1.7, whiteSpace: 'nowrap' }}>
+      {seasonAvg != null && (
+        <div>
+          <span style={{ color: 'var(--text-dim)', fontSize: 10 }}>Szn </span>
+          <strong style={{ color: color(seasonAvg) }}>{seasonAvg}</strong>
+        </div>
+      )}
+      {last5Avg != null && (
+        <div>
+          <span style={{ color: 'var(--text-dim)', fontSize: 10 }}>L5 </span>
+          <strong style={{ color: color(last5Avg) }}>{last5Avg}</strong>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Line Move Panel ───────────────────────────────────────────────────────────
 
 function LineMoveCard({ p }) {
   const m = p.lineMove
@@ -128,7 +159,7 @@ function LineMovePanel({ moves }) {
 
 // ── SlipCard — one combo rendered as a full slip ─────────────────────────────
 
-function SlipCard({ combo, rank, showLeague }) {
+function SlipCard({ combo, rank, showLeague, getStatLine }) {
   return (
     <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border)' }}>
 
@@ -193,6 +224,10 @@ function SlipCard({ combo, rank, showLeague }) {
                 </span>
                 <span>{pick.statType}</span>
               </div>
+              {pick.league === 'NBA' && getStatLine && (() => {
+                const sl = getStatLine(pick.playerName, pick.statType)
+                return sl ? <StatsBadge line={pick.line} {...sl} /> : null
+              })()}
             </div>
 
             {/* Per-pick probability */}
@@ -252,7 +287,7 @@ function SlipCard({ combo, rank, showLeague }) {
 
 // ── ComboColumn — card wrapper: header + slip list ───────────────────────────
 
-function ComboColumn({ legCount, combos, showLeague, isLoading }) {
+function ComboColumn({ legCount, combos, showLeague, isLoading, getStatLine }) {
   const mult = PP_MULTIPLIERS[legCount]
 
   if (isLoading) {
@@ -294,6 +329,7 @@ function ComboColumn({ legCount, combos, showLeague, isLoading }) {
           combo={combo}
           rank={idx + 1}
           showLeague={showLeague}
+          getStatLine={getStatLine}
         />
       ))}
     </div>
@@ -304,6 +340,7 @@ function ComboColumn({ legCount, combos, showLeague, isLoading }) {
 
 export default function PrizePicksSection() {
   const { projections, loading, error, lastRefresh, countdown, refresh } = usePrizePicks()
+  const { getStatLine, statsLoading } = usePlayerStats(projections)
   const [leagueFilter, setLeagueFilter] = useState('ALL')
   const [statFilter, setStatFilter]     = useState('ALL')
   const [sortBy, setSortBy]             = useState('prob')
@@ -494,18 +531,21 @@ export default function PrizePicksSection() {
               combos={combos2}
               showLeague={isAllLeagues}
               isLoading={false}
+              getStatLine={getStatLine}
             />
             <ComboColumn
               legCount={4}
               combos={combos4}
               showLeague={isAllLeagues}
               isLoading={false}
+              getStatLine={getStatLine}
             />
             <ComboColumn
               legCount={6}
               combos={combos6}
               showLeague={isAllLeagues}
               isLoading={false}
+              getStatLine={getStatLine}
             />
           </div>
         </>
@@ -562,6 +602,7 @@ export default function PrizePicksSection() {
                   <th>League</th>
                   <th>Stat</th>
                   <th>Line</th>
+                  <th>Stats</th>
                   <th>Move</th>
                   <th>Type</th>
                   <th>Hit Prob</th>
@@ -601,6 +642,19 @@ export default function PrizePicksSection() {
                             </span>
                           )}
                         </div>
+                      </td>
+                      <td>
+                        {p.league === 'NBA'
+                          ? (() => {
+                              const sl = getStatLine(p.playerName, p.statType)
+                              return sl
+                                ? <StatsBadge line={p.line} {...sl} />
+                                : <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>
+                                    {statsLoading ? '…' : '—'}
+                                  </span>
+                            })()
+                          : <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>—</span>
+                        }
                       </td>
                       <td>
                         {m ? (
